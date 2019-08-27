@@ -1,2 +1,7 @@
-# fb-messenger-media-scraper
-Helper script to scrape your Facebook Messenger account for media shared in your conversations quickly and efficiently.
+# fb-messenger-image-scraper
+Helper script to scrape your Facebook Messenger account for images shared in your conversations quickly and efficiently.
+
+### .env configuration
+
+Carefully configure the `config/.env` file to download images from the specific conversation you want.
+
