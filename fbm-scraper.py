@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     fb_client = Client(fb_email, fb_pw)
 
-    threads = fb_client.fetchThreadList()
+    threads = fb_client.fetchThreadList(limit=os.getenv('threads'))
 
     # Find correct thread for given user URL
     my_thread = None
