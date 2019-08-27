@@ -9,10 +9,17 @@ from fbchat import FBchatException
 import time
 
 
-def download_img_from_url(url, target_path):
+def download_file_from_url(url, target_path):
+    """
+    Download image from a given URL to a specified target path.
+
+    :param url: URL of file to download
+    :param target_path: Local target path to save the file
+    """
     if url is not None:
         r = requests.get(url)
         with open(target_path, 'wb') as f:
+            print('\tDownloading image to {path}'.format(path=target_path))
             f.write(r.content)
 
 
@@ -60,6 +67,10 @@ if __name__ == '__main__':
 
         # Download Full Images
         if len(full_images) > 0:
+            images_count = len(full_images)
+
+            print('Attempting to download {count} images...................\n'.format(count=images_count))
+
             for full_image in full_images:
                 friend_name = str.lower(my_thread.name).replace(' ', '_')
                 file_uid = str(uuid.uuid4())
@@ -68,9 +79,9 @@ if __name__ == '__main__':
 
                 image_path = ''.join([download_path, '\\', 'fb-image-', friend_name, '-', file_uid, '.', file_ext])
 
-                download_img_from_url(img_url, image_path)
+                download_file_from_url(img_url, image_path)
 
-                # Sleep half a second to prevent getting flagged as a bot
+                # Sleep half a second between file downloads to avoid getting flagged as a bot
                 time.sleep(0.5)
         else:
             print('No images to download in the last {count} messages'.format(count=msg_count))
