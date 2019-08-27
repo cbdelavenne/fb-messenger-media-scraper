@@ -45,7 +45,7 @@ if __name__ == '__main__':
         if thread.url == os.getenv('user_url'):
             my_thread = thread
 
-    # Get
+    # Get Messages for my_thread
     if my_thread is not None:
         msg_count = os.getenv('messages')
 
@@ -53,6 +53,7 @@ if __name__ == '__main__':
 
         full_images = []
 
+        # Extract Image attachments' full-sized image signed URLs (along with their original file extension)
         for message in messages:
             if len(message.attachments) > 0:
                 for attachment in message.attachments:
