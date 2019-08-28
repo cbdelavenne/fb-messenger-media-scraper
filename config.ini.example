@@ -1,0 +1,15 @@
+[Credentials]
+email = john@email.com
+password = 123456
+
+[Friend]
+url = https://www.facebook.com/example
+
+[Threads]
+search_limit = 20
+
+[Messages]
+search_limit = 200
+
+[Download]
+path = c:\\Users\\{USERNAME}\\Downloads

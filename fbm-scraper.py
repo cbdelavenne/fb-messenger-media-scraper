@@ -1,12 +1,12 @@
 import os
-from pathlib import Path
-import uuid
 import requests
-from dotenv import load_dotenv
+import time
+import uuid
+import configparser
+
 from fbchat import Client, ImageAttachment
 from fbchat import FBchatException
-
-import time
+from pathlib import Path
 
 
 def download_file_from_url(url, target_path):
@@ -24,32 +24,38 @@ def download_file_from_url(url, target_path):
 
 
 if __name__ == '__main__':
-    env_path = Path('.') / 'config/.env'
-    load_dotenv(dotenv_path=env_path)
+    config_path = Path('.') / 'config.ini'
+    if os.path.exists(config_path) is False:
+        raise Exception("Please create config.ini under this script's current directory")
 
-    download_path = os.getenv('download_path')
+    # Load config file
+    config = configparser.ConfigParser()
+    config.read(config_path)
 
+    download_path = config['Download']['path']
     if os.path.exists(download_path) is False:
-        raise Exception('Download path does not exist. Please specify a valid path in .env')
+        raise Exception("The path specified in download_path does not exist ({path}). Please specify a valid path in "
+                        "config.ini".format(path=download_path))
 
-    fb_email = os.getenv('email')
-    fb_pw = os.getenv('password')
-
+    # Initialize FB Client
+    fb_email = config['Credentials']['email']
+    fb_pw = config['Credentials']['password']
     fb_client = Client(fb_email, fb_pw)
 
-    threads = fb_client.fetchThreadList(limit=os.getenv('threads'))
+    # Search for latest threads
+    thread_search_limit = int(config['Threads']['search_limit'])
+    threads = fb_client.fetchThreadList(limit=thread_search_limit)
 
     # Find correct thread for given user URL
     my_thread = None
     for thread in threads:
-        if thread.url == os.getenv('user_url'):
+        if thread.url == config['Friend']['url']:
             my_thread = thread
 
     # Get Messages for my_thread
     if my_thread is not None:
-        msg_count = os.getenv('messages')
-
-        messages = fb_client.fetchThreadMessages(my_thread.uid, limit=msg_count)
+        message_search_limit = int(config['Messages']['search_limit'])
+        messages = fb_client.fetchThreadMessages(my_thread.uid, limit=message_search_limit)
 
         full_images = []
 
@@ -85,7 +91,6 @@ if __name__ == '__main__':
                 # Sleep half a second between file downloads to avoid getting flagged as a bot
                 time.sleep(0.5)
         else:
-            print('No images to download in the last {count} messages'.format(count=msg_count))
-
+            print('No images to download in the last {count} messages'.format(count=message_search_limit))
     else:
         print('Thread not found for URL provided')

@@ -19,5 +19,5 @@ Carefully configure the `config/.env` file to download images from the specific 
 1. Install Python 3.x
 2. Open `cmd` (Windows) or `terminal` (Unix)
 3. Install pip prerequisites: `pip install -r requirements.txt`
-4. Modify `config/.env` to your needs
+4. Create `config.ini` to your needs (use `config.ini.example` as a reference)
 5. Execute `python ./fbm-scraper.py`
