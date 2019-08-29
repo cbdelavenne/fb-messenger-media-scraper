@@ -95,17 +95,23 @@ if __name__ == '__main__':
 
         # Extract Image attachments' full-sized image signed URLs (along with their original file extension)
         full_images = []
+
+        sender_id = None
+        if config.getboolean('Media', 'sender_only'):
+            sender_id = my_thread.uid
+
         for message in messages:
             if len(message.attachments) > 0:
-                for attachment in message.attachments:
-                    if isinstance(attachment, ImageAttachment):
-                        try:
-                            full_images.append({
-                                'extension': attachment.original_extension,
-                                'full_url': fb_client.fetchImageUrl(attachment.uid)
-                            })
-                        except FBchatException:
-                            pass  # ignore errors
+                if (sender_id is None) or (sender_id == message.author):
+                    for attachment in message.attachments:
+                        if isinstance(attachment, ImageAttachment):
+                            try:
+                                full_images.append({
+                                    'extension': attachment.original_extension,
+                                    'full_url': fb_client.fetchImageUrl(attachment.uid)
+                                })
+                            except FBchatException:
+                                pass  # ignore errors
 
         # Download Full Images
         if len(full_images) > 0:
