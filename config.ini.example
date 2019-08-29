@@ -7,9 +7,14 @@ url = https://www.facebook.com/example
 
 [Threads]
 search_limit = 20
+before_date =
 
 [Messages]
 search_limit = 200
+before_date =
+
+[Media]
+sender_only = true
 
 [Download]
 path = c:\\Users\\{USERNAME}\\Downloads
