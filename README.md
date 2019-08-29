@@ -1,4 +1,5 @@
-# fb-messenger-image-scraper
+# Facebook Messenger: Bulk Download High-Resolution Images
+## fb-messenger-image-scraper
 Helper script to scrape your Facebook Messenger account for images shared in your conversations quickly and efficiently.
 
 ### Configuration
