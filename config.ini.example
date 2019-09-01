@@ -15,6 +15,7 @@ before_date =
 
 [Media]
 sender_only = true
+ext_blacklist = gif,png
 
 [Download]
 path = c:\\Users\\{USERNAME}\\Downloads

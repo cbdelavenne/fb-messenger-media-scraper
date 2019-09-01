@@ -118,22 +118,28 @@ if __name__ == '__main__':
         if message_search_before is not None:
             messages = fb_client.fetchThreadMessages(my_thread.uid, limit=message_search_limit,
                                                      before=message_search_before)
-            print('Searching for images in the last {message_limit} sent before {before_date}...'.format(
+            print('Searching for images in the {message_limit} messages sent before {before_date}...'.format(
                 message_limit=message_search_limit, before_date=message_before_date))
         else:
             messages = fb_client.fetchThreadMessages(my_thread.uid, limit=message_search_limit)
-            print('Searching for images in the last {message_limit}...'.format(message_limit=message_search_limit))
+            print('Searching for images in the last {message_limit} messages...'.format(
+                message_limit=message_search_limit))
 
         sender_id = None
         if config.getboolean('Media', 'sender_only'):
             sender_id = my_thread.uid
-            print('\tNote: Only images from friend will be downloaded (as specified by sender_only in your config.ini)')
+            print('\tNote: Only images sent by {friend_name} will be downloaded (as specified by sender_only in your '
+                  'config.ini)'.format(friend_name=thread_message_name))
 
         # Extract Image attachments' full-sized image signed URLs (along with their original file extension)
+        total_count = 0
+        skip_count = 0
         full_images = []
-
         last_message_date = None
         print('\n')
+
+        extension_blacklist = str.split(config.get('Media', 'ext_blacklist'), ',')
+
         for message in messages:
             message_datetime = convert_epoch_to_datetime(message.timestamp)
 
@@ -142,12 +148,20 @@ if __name__ == '__main__':
                     for attachment in message.attachments:
                         if isinstance(attachment, ImageAttachment):
                             try:
-                                full_images.append({
-                                    'extension': attachment.original_extension,
-                                    'timestamp': message_datetime,
-                                    'full_url': fb_client.fetchImageUrl(attachment.uid)
-                                })
-                                print('.', sep=' ', end='', flush=True)
+                                attachment_ext = str.lower(attachment.original_extension)
+
+                                if attachment_ext not in extension_blacklist:
+                                    full_images.append({
+                                        'extension': attachment_ext,
+                                        'timestamp': message_datetime,
+                                        'full_url': fb_client.fetchImageUrl(attachment.uid)
+                                    })
+                                    print('+', sep=' ', end='', flush=True)
+                                else:
+                                    skip_count += 1
+                                    print('-', sep=' ', end='', flush=True)
+
+                                total_count += 1
                             except FBchatException:
                                 pass  # ignore errors
 
@@ -156,8 +170,9 @@ if __name__ == '__main__':
         # Download Full Images
         if len(full_images) > 0:
             images_count = len(full_images)
-
-            print('\n\nAttempting to download {count} images...................\n'.format(count=images_count))
+            print('\n\nFound a total of {total_count} images. Skipped {skip_count} images that had a blacklisted '
+                  'extension'.format(total_count=total_count, skip_count=skip_count))
+            print('Attempting to download {count} images...................\n'.format(count=images_count))
 
             for full_image in full_images:
                 friend_name = str.lower(my_thread.name).replace(' ', '_')
@@ -177,6 +192,7 @@ if __name__ == '__main__':
             print('No images to download in the last {count} messages'.format(count=message_search_limit))
 
         # Reminder of last message found
-        print('\nLast message found was dated: {last_message_date}'.format(last_message_date=last_message_date))
+        print('\nLast message scanned for image attachments was dated: {last_message_date}'.format(
+            last_message_date=last_message_date))
     else:
         print('Thread not found for URL provided')
