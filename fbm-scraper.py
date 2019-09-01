@@ -29,7 +29,7 @@ def download_file_from_url(url, target_path):
             f.write(r.content)
 
 
-def convert_date_to_unix_ms(date, as_int=True):
+def convert_date_to_epoch(date, as_int=True):
     """
     Convert a given date string to epoch (int in milliseconds)
 
@@ -41,11 +41,26 @@ def convert_date_to_unix_ms(date, as_int=True):
     """
     try:
         dt = datetime.datetime.strptime(date, '%Y-%m-%d')
-        res = ((dt - epoch).total_seconds() * 1000)  # convert to milliseconds
+        res = ((dt - epoch).total_seconds() * 1000.0)  # convert to milliseconds
 
         return int(res) if as_int else res
     except ValueError:
         return None
+
+
+def convert_epoch_to_datetime(timestamp, dt_format='%Y-%m-%d_%H.%M.%S'):
+    """
+    Convert epoch (unix time in ms) to a datetime string
+
+    :param timestamp: Unix time in ms
+    :param dt_format: Format of datetime string
+    :type timestamp: str
+    :type dt_format: str
+    :return:
+    """
+    s = int(timestamp) / 1000.0
+    dt_str = datetime.datetime.fromtimestamp(s).strftime(dt_format)
+    return dt_str
 
 
 if __name__ == '__main__':
@@ -69,7 +84,7 @@ if __name__ == '__main__':
 
     # Search for latest threads
     thread_search_limit = int(config.get('Threads', 'search_limit'))
-    thread_search_before = convert_date_to_unix_ms(config.get('Threads', 'before_date'))
+    thread_search_before = convert_date_to_epoch(config.get('Threads', 'before_date'))
 
     if thread_search_before is not None:
         threads = fb_client.fetchThreadList(limit=thread_search_limit, before=thread_search_before)
@@ -86,32 +101,46 @@ if __name__ == '__main__':
 
     # Get Messages for my_thread
     if my_thread is not None:
+        thread_message_count = my_thread.message_count
+        thread_message_name = my_thread.name
+
+        print('Found {count} messages in thread with {friend_name}'.format(count=thread_message_count,
+                                                                           friend_name=thread_message_name))
+
+        message_before_date = config.get('Messages', 'before_date')
         message_search_limit = int(config.get('Messages', 'search_limit'))
-        message_search_before = convert_date_to_unix_ms(config.get('Messages', 'before_date'))
+        message_search_before = convert_date_to_epoch(message_before_date)
 
         if message_search_before is not None:
             messages = fb_client.fetchThreadMessages(my_thread.uid, limit=message_search_limit,
                                                      before=message_search_before)
+            print('Searching for images in the last {message_limit} sent before {before_date}...'.format(
+                message_limit=message_search_limit, before_date=message_before_date))
         else:
             messages = fb_client.fetchThreadMessages(my_thread.uid, limit=message_search_limit)
-
-        # Extract Image attachments' full-sized image signed URLs (along with their original file extension)
-        full_images = []
+            print('Searching for images in the last {message_limit}...'.format(message_limit=message_search_limit))
 
         sender_id = None
         if config.getboolean('Media', 'sender_only'):
             sender_id = my_thread.uid
+            print('\tNote: Only images from friend will be downloaded (as specified by sender_only in your config.ini)')
+
+        # Extract Image attachments' full-sized image signed URLs (along with their original file extension)
+        full_images = []
 
         for message in messages:
             if len(message.attachments) > 0:
                 if (sender_id is None) or (sender_id == message.author):
+                    message_timestamp = message.timestamp
                     for attachment in message.attachments:
                         if isinstance(attachment, ImageAttachment):
                             try:
                                 full_images.append({
                                     'extension': attachment.original_extension,
+                                    'timestamp': convert_epoch_to_datetime(message_timestamp),
                                     'full_url': fb_client.fetchImageUrl(attachment.uid)
                                 })
+                                print('.', sep=' ', end='', flush=True)
                             except FBchatException:
                                 pass  # ignore errors
 
@@ -119,15 +148,17 @@ if __name__ == '__main__':
         if len(full_images) > 0:
             images_count = len(full_images)
 
-            print('Attempting to download {count} images...................\n'.format(count=images_count))
+            print('\n\nAttempting to download {count} images...................\n'.format(count=images_count))
 
             for full_image in full_images:
                 friend_name = str.lower(my_thread.name).replace(' ', '_')
                 file_uid = str(uuid.uuid4())
                 file_ext = full_image['extension']
+                file_timestamp = full_image['timestamp']
                 img_url = full_image['full_url']
 
-                image_path = ''.join([download_path, '\\', 'fb-image-', friend_name, '-', file_uid, '.', file_ext])
+                image_path = ''.join([download_path, '\\', 'fb-image-', file_uid, '-', friend_name, '-',
+                                      file_timestamp, '.', file_ext])
 
                 download_file_from_url(img_url, image_path)
 
