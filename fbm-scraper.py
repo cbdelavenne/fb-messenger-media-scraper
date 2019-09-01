@@ -111,6 +111,10 @@ if __name__ == '__main__':
         message_search_limit = int(config.get('Messages', 'search_limit'))
         message_search_before = convert_date_to_epoch(message_before_date)
 
+        if message_search_limit > thread_message_count:
+            message_search_limit = thread_message_count
+            print('\tWarning: Message search limit was greater than the total number of messages in thread.\n')
+
         if message_search_before is not None:
             messages = fb_client.fetchThreadMessages(my_thread.uid, limit=message_search_limit,
                                                      before=message_search_before)
@@ -128,21 +132,26 @@ if __name__ == '__main__':
         # Extract Image attachments' full-sized image signed URLs (along with their original file extension)
         full_images = []
 
+        last_message_date = None
+        print('\n')
         for message in messages:
+            message_datetime = convert_epoch_to_datetime(message.timestamp)
+
             if len(message.attachments) > 0:
                 if (sender_id is None) or (sender_id == message.author):
-                    message_timestamp = message.timestamp
                     for attachment in message.attachments:
                         if isinstance(attachment, ImageAttachment):
                             try:
                                 full_images.append({
                                     'extension': attachment.original_extension,
-                                    'timestamp': convert_epoch_to_datetime(message_timestamp),
+                                    'timestamp': message_datetime,
                                     'full_url': fb_client.fetchImageUrl(attachment.uid)
                                 })
                                 print('.', sep=' ', end='', flush=True)
                             except FBchatException:
                                 pass  # ignore errors
+
+            last_message_date = message_datetime
 
         # Download Full Images
         if len(full_images) > 0:
@@ -166,5 +175,8 @@ if __name__ == '__main__':
                 time.sleep(politeness_index)
         else:
             print('No images to download in the last {count} messages'.format(count=message_search_limit))
+
+        # Reminder of last message found
+        print('\nLast message found was dated: {last_message_date}'.format(last_message_date=last_message_date))
     else:
         print('Thread not found for URL provided')
