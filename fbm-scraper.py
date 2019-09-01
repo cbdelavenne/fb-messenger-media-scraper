@@ -78,9 +78,11 @@ if __name__ == '__main__':
 
     # Find correct thread for given user URL
     my_thread = None
+    friend_url = config.get('Friend', 'url')
     for thread in threads:
-        if thread.url == config.get('Friend', 'url'):
+        if thread.url == friend_url:
             my_thread = thread
+            break
 
     # Get Messages for my_thread
     if my_thread is not None:
