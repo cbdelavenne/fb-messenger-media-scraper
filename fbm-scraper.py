@@ -95,9 +95,12 @@ if __name__ == '__main__':
     my_thread = None
     friend_url = config.get('Friend', 'url')
     for thread in threads:
-        if thread.url == friend_url:
-            my_thread = thread
-            break
+        try:
+             if thread.url == friend_url:
+                my_thread = thread
+                break
+        except AttributeError:
+             pass
 
     # Get Messages for my_thread
     if my_thread is not None:
