@@ -1,10 +1,15 @@
 aenum==2.2.1
+argcomplete==1.10.0
 attrs==19.1.0
 beautifulsoup4==4.8.0
 certifi==2019.6.16
 chardet==3.0.4
+extract-msg==0.23.1
 fbchat==1.7.3
 idna==2.8
+pdfminer.six==20181108
 requests==2.22.0
+six==1.12.0
 soupsieve==1.9.3
+stem==1.8.0
 urllib3==1.25.3
