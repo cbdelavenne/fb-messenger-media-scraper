@@ -95,7 +95,7 @@ if __name__ == '__main__':
     my_thread = None
     friend_url = config.get('Friend', 'url')
     for thread in threads:
-        if thread.url == friend_url:
+        if hasattr(thread, 'url') and (thread.url == friend_url):
             my_thread = thread
             break
 
