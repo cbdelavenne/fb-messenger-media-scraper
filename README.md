@@ -1,3 +1,8 @@
+# WARNING
+Using this script may lock out the account you've set up in your configuration file. Use with caution! I'm not responsible for anyone getting locked out of their account; nor is the `fbchat` library. :smile:
+
+--------------------------
+
 # Facebook Messenger: Hi-Res Image Downloader
 ## fb-messenger-image-scraper
 Simple little script to bulk download high-resolution images from your Facebook Messenger account for a specific chat exchanged between your account and a friend's.
