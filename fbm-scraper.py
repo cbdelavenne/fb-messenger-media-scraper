@@ -4,6 +4,8 @@ import time
 import uuid
 import configparser
 import datetime
+import fbchat
+import re
 
 from fbchat import Client, ImageAttachment
 from fbchat import FBchatException
@@ -11,6 +13,9 @@ from pathlib import Path
 
 politeness_index = 0.5  # ;)
 epoch = datetime.datetime(1970, 1, 1)
+
+# Hack to get the login to work, see: https://github.com/fbchat-dev/fbchat/issues/615#issuecomment-716089816
+fbchat._state.FB_DTSG_REGEX = re.compile(r'"name":"fb_dtsg","value":"(.*?)"')
 
 
 def download_file_from_url(url, target_path):
@@ -80,7 +85,8 @@ if __name__ == '__main__':
     # Initialize FB Client
     fb_email = config.get('Credentials', 'email')
     fb_pw = config.get('Credentials', 'password')
-    fb_client = Client(fb_email, fb_pw)
+    user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36"
+    fb_client = Client(fb_email, fb_pw, user_agent=user_agent)
 
     # Search for latest threads
     thread_search_limit = int(config.get('Threads', 'search_limit'))
